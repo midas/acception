@@ -5,11 +5,12 @@ defmodule Acception.AcceptorTcp.Application do
 
   use Application
 
+  import Supervisor.Spec, warn: false
+
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: Acception.AcceptorTcp.Worker.start_link(arg)
-      # {Acception.AcceptorTcp.Worker, arg},
+      worker(Acception.AcceptorTcp.Acceptor, [[], [name: :TcpAcceptor]]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
