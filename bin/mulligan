@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+USAGE="Usage:\n  mulligan APP"
+
+app=$1
+app=${app:-all}
+env=$2
+env=${env:-dev}
+
+
+if [ $app == "all" -o $app == "domain" ]
+then
+  announce "Mulliganing domain"
+  (
+    die_on_sigint
+    cd apps/domain && mix phil_columns.mulligan -t base -e $env
+  )
+fi

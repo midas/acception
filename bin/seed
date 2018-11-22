@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+app=$1
+app=${app:-all}
+
+if [ $app == "all" -o $app == "domain" ]
+then
+  announce "Seeding domain"
+  (cd apps/domain && mix phil_columns.seed -t base)
+fi

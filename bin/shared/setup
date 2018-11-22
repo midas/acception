@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+function ensure_installed() {
+  announce "Ensuring $1 installed"
+
+  sudo dnf list installed | grep $1 1>/dev/null
+
+  if [ $? -ne 0 ]; then
+    step "Installing $1 ..."
+    sudo dnf -y install $1
+  else
+    step "$1 is already installed"
+  fi
+}
+
+function install_docker_engine {
+  sudo tee /etc/yum.repos.d/docker.repo <<-DONE
+[dockerrepo]
+name=Docker Repository
+baseurl=https://yum.dockerproject.org/repo/main/fedora/\$releasever/
+enabled=1
+gpgcheck=1
+gpgkey=https://yum.dockerproject.org/gpg
+DONE
+  
+  ensure_installed docker-engine
+}

@@ -1,3 +1,97 @@
 #!/usr/bin/env bash
 
-iex --name "acception@127.0.0.1" -S mix
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+me=`basename $0`
+CREATE_DB=true
+DB=true
+MIGRATE=true
+SEED=true
+APP=true
+for i in "$@"
+do
+case $i in
+    --app)
+    CREATE_DB=false
+    DB=false
+    MIGRATE=false
+    SEED=false
+    shift
+    ;;
+    --services)
+    CREATE_DB=false
+    APP=false
+    MIGRATE=false
+    SEED=false
+    shift
+    ;;
+    --no-migrate)
+    MIGRATE=false
+    shift
+    ;;
+    --no-seed)
+    SEED=false
+    shift
+    ;;
+    --no-db)
+    DB=false
+    shift
+    ;;
+    --no-db-prep)
+    CREATE_DB=false
+    MIGRATE=false
+    SEED=false
+    ;;
+    --no-app)
+    APP=false
+    shift
+    ;;
+    --help|-h)
+    echo Usage:
+    echo "  $me"
+    exit
+    ;;
+    *)
+    echo Arguments '"'$@'"' not recognized
+    echo Try:
+    echo "  $me --help"
+    exit
+    ;;
+esac
+done
+
+echo -e "\033[0;36mNCite Vetting Frontend Start\033[00m"
+echo "  App Server: $APP"
+echo "  DB Container: $DB"
+echo "  Migrate DB: $MIGRATE"
+echo "  Seed DB: $SEED"
+echo "  Nginx Container: $WEB"
+echo "..."
+echo ""
+
+if $DB ; then
+  source $current_dir/start-db
+fi
+
+announce "Compiling apps"
+mix compile
+
+wait_on_db_alive 5440
+
+if $CREATE_DB ; then
+  source $current_dir/create-dbs
+fi
+if $MIGRATE ; then
+  source $current_dir/migrate
+fi
+#if $SEED ; then
+  #source $current_dir/seed
+#fi
+
+if $APP ; then
+  announce "Starting all umbrella apps"
+  iex --name "acception@127.0.0.1" -S mix
+fi

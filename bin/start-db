@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+announce "Starting Docker PostgreSQL container"
+docker-compose up -d db

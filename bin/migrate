@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+app=$1
+app=${app:-all}
+env=$2
+env=${env:-dev}
+
+if [ $app == "all" -o $app == "domain" ]
+then
+  announce "Migrating domain for $env"
+  (
+    die_on_sigint
+    cd apps/domain && MIX_ENV=$env mix ecto.migrate
+  )
+fi

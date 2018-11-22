@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+source $current_dir/shared/example-files
+
+die_on_sigint
+
+USAGE="apply-example-files --apps=[APP1,APP2,...] --exclude-apps=[APP1,APP2,...] --[compile|root]
+
+apps         - When specified, limits the example files applied to the specified comma-separated applications.
+exclude-apps - When specified, excludes the specified comma-separated applications from the example files applie.
+compile      - When specified, also compiles.
+envs         - When specified, limits the example files applied to the specified comma-separated environment(s).
+root         - When specified, applies the example files in the root of the umbrella.
+
+
+Examples:
+
+# Apply all application example files
+bin/apply-example-files
+
+# Apply all application and root example files
+bin/apply-example-files --root
+
+# Apply all application example files and compile all envs
+bin/apply-example-files --compile
+
+# Apply example files from apps backend and frontend
+bin/apply-example-files --apps=backend,frontend
+
+# Apply example files from all apps except backend and frontend
+bin/apply-example-files --apps=backend,frontend
+"
+
+compile=false
+all=false
+apps=()
+excl_apps=()
+root=false
+envs=()
+
+for i in "$@"
+do
+case $i in
+  --apps=*)
+    passed_apps="${i#*=}"
+    for app in ${passed_apps//,/ }; do
+      apps+=("$app")
+    done
+    shift
+    ;;
+  --compile)
+    compile=true
+    ;;
+  --envs=*)
+    passed_envs="${i#*=}"
+    for env in ${passed_envs//,/ }; do
+      envs+=("$env")
+    done
+    shift
+    ;;
+  --exclude-apps=*)
+    excl_apps+=("${i#*=}")
+    for app in ${excl_apps//,/ }; do
+      excl_apps+=("$app")
+    done
+    shift
+    ;;
+  --root)
+    root=true
+    ;;
+  --help|-h)
+    echo "Applies example files"
+    echo ""
+    echo Usage:
+    echo -e "  $USAGE"
+    exit
+    ;;
+  *)
+esac
+done
+
+apply_example_files() {
+  path=$1
+  find_pattern=$2
+  grep_pattern=$3
+  example_files=`find $path -name "$find_pattern" -print | grep -P "$grep_pattern"`
+  for source in $example_files; do
+    dest=${source%.*}
+    echo "$source -> $dest"
+    cp $source $dest
+  done
+}
+
+find_pattern="*.example"
+
+if [ ${#apps[@]} -eq 0 ]; then
+  all=true
+  apps=($(cd apps && ls -d *))
+fi
+
+if [ -z "$envs" ]; then
+  grep_pattern=".*"
+else
+  list=$(printf "|%s" "${envs[@]}")
+  list=${list:1}
+  grep_pattern="($list)"
+fi
+
+# Exclude apps
+for excl_app in ${excl_apps[@]}; do
+  all=false
+  for i in ${!apps[@]}; do
+    if [[ ${apps[i]} = $excl_app ]]; then
+      unset 'apps[i]'
+    fi
+  done
+done
+
+# Reset apps array
+for i in "${!apps[@]}"; do
+  new_apps+=( "${apps[i]}" )
+done
+apps=("${new_apps[@]}")
+unset new_apps
+
+# Exit if apps array is empty
+if [ ${#apps[@]} -eq 0 ]; then
+  announce "No apps to run"
+  exit 0
+fi
+
+if $root ; then
+  echo ""
+  announce "Applying root example config files"
+  apply_example_files config $find_pattern $grep_pattern
+fi
+
+for app in ${apps[@]}; do
+  echo ""
+  announce "Applying $app example config files"
+  (
+    cd apps/$app && apply_example_files . $find_pattern $grep_pattern
+  )
+done
+
+if $compile ; then
+  # TODO only compile included envs
+  MIX_ENV=dev mix compile --force
+  MIX_ENV=integration mix compile --force
+  MIX_ENV=test mix compile --force
+fi

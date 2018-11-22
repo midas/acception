@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+source $current_dir/shared/setup
+
+die_on_sigint
+
+USAGE="Usage:\n  setup"
+
+
+announce "Building Docker PostgreSQL image"
+docker-compose up -d db
+
+#announce "Applying example files"
+#$current_dir/apply-example-files --no-compile
+
+announce "Getting Elixir project dependencies"
+mix deps.get
+
+announce "Compiling Elixir project dependencies"
+mix deps.compile
+
+#announce "Installing JavaScript dependencies"
+#$current_dir/install-js-deps
+
+#announce "Building assets"
+#$current_dir/build-assets
+
+wait_on_db_alive 5440
+
+#announce "Migrating DB"
+#$current_dir/migrate all dev
+#announce "Seeding DB"
+#$current_dir/seed
+
+announce "Shut down containers"
+docker-compose kill

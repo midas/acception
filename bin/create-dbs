@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+env=$1
+env=${env:-dev}
+
+announce "Creating domain DB for $env"
+(
+  cd apps/domain && MIX_ENV=$env mix ecto.create
+)

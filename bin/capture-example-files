@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+capture_example_files() {
+  example_files=`ls -1 config/$pattern 2>/dev/null`
+  for dest in $example_files; do
+    source=${dest%.*}
+    echo "$source -> $dest"
+    cp $source $dest
+  done
+}
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+env=$1
+env=${env:-all}
+app=$2
+app=${app:-all}
+
+USAGE="Usage:\n  capture-example-files ENV APP"
+
+if [ "$env" == "all" ]; then
+  pattern="*.example"
+else
+  pattern="$env.*.example"
+fi
+
+if [ "$app" == "all" ]; then
+  apps=`ls -1 apps`
+else
+  apps=($app)
+fi
+
+if [ "$app" == "all" ]; then
+  announce "Capturing config files for root"
+  capture_example_files
+fi
+
+for app in $apps; do
+  echo ""
+  announce "Capturing config files for $app"
+  (
+    die_on_sigint
+    cd apps/$app
+    capture_example_files
+  )
+done
