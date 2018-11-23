@@ -5,7 +5,9 @@ defmodule Acception.ClientTcp.Client do
 
       use GenServer
 
+      @connected :connected
       @delimiter <<255, 0, 170, 85>>
+      @disconnected :disconnected
       @message_pack_identifier "MPCK"
 
       # Public API ###################
@@ -21,27 +23,45 @@ defmodule Acception.ClientTcp.Client do
       def init(_args) do
         Process.send_after(self(), :connect, 0)
 
-        {:ok, %{socket: nil}}
+        {:ok, %{retries: 0,
+                socket: nil,
+                status: @disconnected}}
       end
 
       def handle_call({:send, level, app, timestamp, tags, msg},
                       _from,
-                      %{socket: socket} = state)
+                      %{socket: socket, status: status} = state)
       do
-        _send(socket, level, app, timestamp, tags, msg)
+        _send(status, socket, level, app, timestamp, tags, msg)
 
         {:reply, :ok, state}
       end
 
       def handle_info(:connect, state) do
-        socket = connect()
+        connect(state)
+      end
 
-        {:noreply, %{state | socket: socket}}
+      def handle_info({:tcp, socket, tcp_frame}, state) do
+        tcp(socket, tcp_frame)
+
+        {:noreply, state}
+      end
+
+      def handle_info({:tcp_closed, socket}, state) do
+        tcp_closed(socket, :unknown, state)
+      end
+
+      def handle_info({:tcp_error, socket, reason}, state) do
+        tcp_closed(socket, reason, state)
       end
 
       # Private ##########
 
-      defp _send(socket, level, app, timestamp, tags, msg) do
+      defp _send(@disconnected, _socket, _level, _app, _timestamp, _tags, _msg) do
+        # TODO cache until connected
+      end
+
+      defp _send(@connected, socket, level, app, timestamp, tags, msg) do
         bin_msg =
           Msgpax.pack!(%{
             type: "log",
@@ -55,15 +75,49 @@ defmodule Acception.ClientTcp.Client do
         :gen_tcp.send(socket, @message_pack_identifier <> bin_msg <> @delimiter)
       end
 
-      defp connect do
-        ip_address()
-        |> String.to_charlist()
-        |> :gen_tcp.connect(port(), [active: false])
-        |> handle_connect()
+      defp tcp(socket, _tcp_frame) do
+        :inet.setopts(socket, active: :once)
       end
 
-      defp handle_connect({:ok, socket}),   do: socket
-      defp handle_connect({:error, error}), do: raise error
+      defp tcp_closed(socket, reason, state) do
+        retry_connect(ip_address(), port(), "unknown", state)
+      end
+
+      defp connect(state) do
+        ip_address()
+        |> String.to_charlist()
+        |> :gen_tcp.connect(port(), [:binary, active: :once, reuseaddr: true])
+        |> handle_connect(state)
+      end
+
+      defp handle_connect({:ok, socket}, state) do
+        {:noreply, %{state | retries: 0,
+                             socket: socket,
+                             status: @connected}}
+      end
+
+      defp handle_connect({:error, :econnrefused}, state)   do
+        retry_connect(ip_address(), port(), "refused", state)
+      end
+
+      defp handle_connect({:error, error}, _state), do: raise error
+
+      defp retry_connect(host, port, reason, %{retries: retries} = state) do
+        retry_in_ms = retry_timeout(retries)
+        #Logger.warn(["Socket connection to ", host, ":", inspect(port), " ", reason, ", scheduling retry in ", inspect(retry_in_ms), " ms"])
+        Process.send_after(self(), :connect, retry_in_ms)
+
+        {:noreply, %{state | retries: (retries + 1),
+                             status: @disconnected}}
+      end
+
+      defp retry_timeout(retries) when retries > 500, do: 60_000
+      defp retry_timeout(retries) when retries > 200, do: 30_000
+      defp retry_timeout(retries) when retries > 100, do: 15_000
+      defp retry_timeout(retries) when retries > 50,  do: 10_000
+      defp retry_timeout(retries) when retries > 25,  do: 5_000
+      defp retry_timeout(retries) when retries > 10,  do: 2_500
+      defp retry_timeout(_),                          do: 1_000
 
       defp ip_address, do: Keyword.get(scoped_config(), :ip_address)
       defp port,        do: Keyword.get(scoped_config(), :port)
