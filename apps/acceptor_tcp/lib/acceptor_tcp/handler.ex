@@ -45,7 +45,7 @@ defmodule Acception.AcceptorTcp.Handler do
       {:tcp_closed, socket} ->
         Logger.debug("[tcp.handler] closed socket: #{inspect(socket)}")
       {:tcp_error, socket, reason} ->
-        Logger.error("[tcp.handler] socket: #{inspect(socket)}, closed becaose of the error reason: #{inspect(reason)}")
+        Logger.error("[tcp.handler] socket: #{inspect(socket)}, closed because of the error reason: #{inspect(reason)}")
       {:tcp_error, reason} ->
         Logger.error("[tcp.handler] error: #{inspect(reason)}")
       {'EXIT', _pid, reason} ->
