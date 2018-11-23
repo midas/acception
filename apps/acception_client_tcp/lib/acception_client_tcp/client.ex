@@ -120,7 +120,7 @@ defmodule Acception.ClientTcp.Client do
       defp retry_timeout(_),                          do: 1_000
 
       defp ip_address, do: Keyword.get(scoped_config(), :ip_address)
-      defp port,        do: Keyword.get(scoped_config(), :port)
+      defp port,       do: Keyword.get(scoped_config(), :port)
 
       defp scoped_config, do: Application.get_env(:acception_client_tcp, otp_app())
 
