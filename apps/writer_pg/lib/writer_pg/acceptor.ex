@@ -46,6 +46,10 @@ defmodule Acception.WriterPg.Acceptor do
   defp build_attrs({level, app, timestamp, tags, msg}) when is_binary(timestamp) do
     {:ok, timestamp, _} = DateTime.from_iso8601(timestamp)
 
+    build_attrs({level, app, timestamp, tags, msg})
+  end
+
+  defp build_attrs({level, app, timestamp, tags, msg}) do
     %{
       level: level,
       app: app,
