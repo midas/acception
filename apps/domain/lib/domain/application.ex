@@ -8,6 +8,7 @@ defmodule Acception.Domain.Application do
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
+      Acception.Domain.Repo,
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

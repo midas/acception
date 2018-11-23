@@ -5,9 +5,13 @@ defmodule Acception.WriterPg.Application do
 
   use Application
 
+  import Supervisor.Spec, warn: false
+
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
+      Acception.WriterPg.Repo,
+      worker(Acception.WriterPg.Acceptor, [[], [name: :WriterPgAcceptor]]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

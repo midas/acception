@@ -1,0 +1,6 @@
+use Mix.Config
+
+config :acceptor_tcp, 
+  acceptors_size: 20,
+  delimiter: <<255, 0, 170, 85>>,
+  port: 9000

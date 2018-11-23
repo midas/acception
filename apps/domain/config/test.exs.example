@@ -1,0 +1,9 @@
+use Mix.Config
+
+config :domain, Acception.Domain.Repo,
+  username: "postgres",
+  password: "postgres",
+  database: "acception_test",
+  hostname: "localhost",
+  port: 5440,
+  pool_size: 10

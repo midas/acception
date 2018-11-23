@@ -7,14 +7,15 @@ defmodule Acception.AcceptorTcp.Protocol do
   The log message unpacked format is:
   %{
     "type" => "log",
+    "l" => level,
+    "a" => app,
     "ts" => timestamp,
     "tags" => ["tag1", ...],
     "m" => message
   }
 
-  The type, timestamp and message is required.
+  The type, level, timestamp and message is required.
   """
-
   require Logger
 
   def process("MPCK" <> msg) do
@@ -26,19 +27,40 @@ defmodule Acception.AcceptorTcp.Protocol do
   def process(msg), do: Logger.error(["Unknown data interchange format: ", msg])
 
   defp handle_msgpack_unpack({:ok, %{"type" => "log",
+                                     "l"    => level,
+                                     "a"    => app,
                                      "tags" => tags,
                                      "ts"   => timestamp,
                                      "m"    => msg}})
     when is_list(tags)
   do
-    Logger.info(["Log tagged msg: ", inspect([timestamp, tags, msg])])
+    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, tags, msg})
   end
 
   defp handle_msgpack_unpack({:ok, %{"type" => "log",
+                                     "l"    => level,
+                                     "a"    => app,
                                      "ts"   => timestamp,
                                      "m"    => msg}})
   do
-    Logger.info(["Log msg: ", inspect([timestamp, msg])])
+    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, nil, msg})
+  end
+
+  defp handle_msgpack_unpack({:ok, %{"type" => "log",
+                                     "l"    => level,
+                                     "tags" => tags,
+                                     "ts"   => timestamp,
+                                     "m"    => msg}})
+  do
+    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, tags, msg})
+  end
+
+  defp handle_msgpack_unpack({:ok, %{"type" => "log",
+                                     "l"    => level,
+                                     "ts"   => timestamp,
+                                     "m"    => msg}})
+  do
+    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, nil, msg})
   end
 
   defp handle_msgpack_unpack({:ok, msg}) do

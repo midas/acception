@@ -26,6 +26,7 @@ defmodule Acception.Writer.MixProject do
 
   defp deps do
     [
+      {:shared, in_umbrella: true},
     ]
   end
 

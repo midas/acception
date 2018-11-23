@@ -26,6 +26,8 @@ defmodule Acception.WriterPg.MixProject do
 
   defp deps do
     [
+      {:domain, in_umbrella: true},
+      {:shared, in_umbrella: true},
     ]
   end
 

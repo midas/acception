@@ -1,0 +1,7 @@
+use Mix.Config
+
+config :writer, :cache_coordinator_interval_in_ms, 3_000
+
+config :writer, :timeout_coordinator_interval_in_ms, 10_000
+
+config :writer, :min_cache_size_for_write, 5

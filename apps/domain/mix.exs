@@ -11,7 +11,8 @@ defmodule Acception.Domain.MixProject do
       lockfile: "../../mix.lock",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      aliases: aliases()
     ]
   end
 
@@ -26,6 +27,28 @@ defmodule Acception.Domain.MixProject do
 
   defp deps do
     [
+      {:ecto_sql, "~> 3.0"},
+      {:phil_columns, "~> 2.0"},
+      #{:phil_columns, path: "../../../../personal/phil_columns_test/apps/phil_columns-ex", override: true},
+      {:postgrex, ">= 0.0.0"},
+    ]
+  end
+
+  defp aliases do
+    [
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"],
+      "ecto.mulligan": ["ecto.rollback -v 0", "ecto.migrate"],
+      "phil_columns.fresh": [
+        "ecto.mulligan",
+        "phil_columns.seed -t base"
+      ],
+      "phil_columns.mulligan": [
+        "ecto.mulligan",
+        "phil_columns.rollback -v 0",
+        "phil_columns.seed -t base"
+      ],
+      test: ["ecto.create --quiet", "ecto.migrate", "test"]
     ]
   end
 

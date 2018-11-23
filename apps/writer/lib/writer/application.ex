@@ -5,9 +5,15 @@ defmodule Acception.Writer.Application do
 
   use Application
 
+  import Supervisor.Spec, warn: false
+
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
+      worker(Acception.Queue, [[], [name: :WriterQueue]]),
+      worker(Acception.Writer.Acceptor, [[], [name: :WriterAcceptor]]),
+      worker(Acception.Writer.CacheCoordinator, [[], [name: :WriterCacheCoordinator]]),
+      worker(Acception.Writer.TimeoutCoordinator, [[], [name: :WriterTimeoutCoordinator]]),
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
