@@ -25,6 +25,7 @@ defmodule Acception.ClientTcp.MixProject do
 
   defp deps do
     [
+      {:msgpax, "~> 2.1"},
     ]
   end
 
