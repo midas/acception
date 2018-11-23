@@ -80,11 +80,11 @@ defmodule Acception.ClientTcp.Client do
       end
 
       defp tcp_closed(socket, reason, state) do
-        retry_connect(ip_address(), port(), "unknown", state)
+        retry_connect(host(), port(), "unknown", state)
       end
 
       defp connect(state) do
-        ip_address()
+        host()
         |> String.to_charlist()
         |> :gen_tcp.connect(port(), [:binary, active: :once, reuseaddr: true])
         |> handle_connect(state)
@@ -97,7 +97,7 @@ defmodule Acception.ClientTcp.Client do
       end
 
       defp handle_connect({:error, :econnrefused}, state)   do
-        retry_connect(ip_address(), port(), "refused", state)
+        retry_connect(host(), port(), "refused", state)
       end
 
       defp handle_connect({:error, error}, _state), do: raise error
@@ -119,8 +119,8 @@ defmodule Acception.ClientTcp.Client do
       defp retry_timeout(retries) when retries > 10,  do: 2_500
       defp retry_timeout(_),                          do: 1_000
 
-      defp ip_address, do: Keyword.get(scoped_config(), :ip_address)
-      defp port,       do: Keyword.get(scoped_config(), :port)
+      defp host, do: Keyword.get(scoped_config(), :host)
+      defp port, do: Keyword.get(scoped_config(), :port)
 
       defp scoped_config, do: Application.get_env(:acception_client_tcp, otp_app())
 
