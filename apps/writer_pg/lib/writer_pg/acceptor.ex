@@ -43,18 +43,19 @@ defmodule Acception.WriterPg.Acceptor do
     |> maybe_write()
   end
 
-  defp build_attrs({level, app, timestamp, tags, msg}) when is_binary(timestamp) do
+  defp build_attrs({level, app, timestamp, tags, metadata, msg}) when is_binary(timestamp) do
     {:ok, timestamp, _} = DateTime.from_iso8601(timestamp)
 
-    build_attrs({level, app, timestamp, tags, msg})
+    build_attrs({level, app, timestamp, tags, metadata, msg})
   end
 
-  defp build_attrs({level, app, timestamp, tags, msg}) do
+  defp build_attrs({level, app, timestamp, tags, metadata, msg}) do
     %{
       level: level,
       app: app,
       timestamp: timestamp,
       tags: tags,
+      metadata: metadata,
       msg: msg,
     }
   end

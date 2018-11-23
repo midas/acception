@@ -14,8 +14,8 @@ defmodule Acception.ClientTcp.Client do
 
       def start_link(args, opts \\ []), do: GenServer.start_link(__MODULE__, args, opts)
 
-      def send(client, level, app, timestamp, tags \\ [], msg) do
-        GenServer.call(client, {:send, level, app, timestamp, tags, msg})
+      def send(client, level, app, timestamp, tags, metadata, msg) do
+        GenServer.call(client, {:send, level, app, timestamp, tags, metadata, msg})
       end
 
       # Private API ###################
@@ -28,11 +28,11 @@ defmodule Acception.ClientTcp.Client do
                 status: @disconnected}}
       end
 
-      def handle_call({:send, level, app, timestamp, tags, msg},
+      def handle_call({:send, level, app, timestamp, tags, metadata, msg},
                       _from,
                       %{socket: socket, status: status} = state)
       do
-        _send(status, socket, level, app, timestamp, tags, msg)
+        _send(status, socket, level, app, timestamp, tags, metadata, msg)
 
         {:reply, :ok, state}
       end
@@ -57,15 +57,16 @@ defmodule Acception.ClientTcp.Client do
 
       # Private ##########
 
-      defp _send(@disconnected, _socket, _level, _app, _timestamp, _tags, _msg) do
+      defp _send(@disconnected, _socket, _level, _app, _timestamp, _tags, _metadata, _msg) do
         # TODO cache until connected
       end
 
-      defp _send(@connected, socket, level, app, timestamp, tags, msg) do
+      defp _send(@connected, socket, level, app, timestamp, tags, metadata, msg) do
         bin_msg =
           Msgpax.pack!(%{
             type: "log",
             a: app,
+            md: metadata,
             m: msg,
             tags: tags,
             ts: timestamp,

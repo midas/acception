@@ -10,6 +10,7 @@ defmodule Acception.Domain.Repo.Migrations.AddEntries do
     EntriesEntry.insert_changeset(%{
       app: "app_1",
       level: "error",
+      metadata: %{request_id: "ABC123"},
       msg: "This is a \n very important message",
       tags: ~w(tag_1 tag_2),
       timestamp: timestamp
@@ -20,6 +21,7 @@ defmodule Acception.Domain.Repo.Migrations.AddEntries do
     EntriesEntry.insert_changeset(%{
       app: "app_2",
       level: "error",
+      metadata: %{request_id: "ABC123"},
       msg: "Another message",
       tags: ~w(tag_1),
       timestamp: timestamp
@@ -30,6 +32,7 @@ defmodule Acception.Domain.Repo.Migrations.AddEntries do
     EntriesEntry.insert_changeset(%{
       app: "app_1",
       level: "error",
+      metadata: %{request_id: "ABC123"},
       msg: "This message",
       tags: ~w(tag_2),
       timestamp: timestamp

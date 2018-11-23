@@ -28,6 +28,7 @@ defmodule Acception.Domain.MixProject do
   defp deps do
     [
       {:ecto_sql, "~> 3.0"},
+      {:jason, "~> 1.1"},
       {:phil_columns, "~> 2.0"},
       #{:phil_columns, path: "../../../../personal/phil_columns_test/apps/phil_columns-ex", override: true},
       {:postgrex, ">= 0.0.0"},

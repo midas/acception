@@ -53,10 +53,32 @@ defmodule Acception.AcceptorTcp.Protocol do
                     "a"    => app,
                     "tags" => tags,
                     "ts"   => timestamp,
+                    "md"   => metadata,
                     "m"    => msg})
     when is_list(tags)
   do
-    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, tags, msg})
+    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, tags, metadata, msg})
+  end
+
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "a"    => app,
+                    "tags" => tags,
+                    "ts"   => timestamp,
+                    "m"    => msg})
+    when is_list(tags)
+  do
+    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, tags, nil, msg})
+  end
+
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "a"    => app,
+                    "ts"   => timestamp,
+                    "md"   => metadata,
+                    "m"    => msg})
+  do
+    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, nil, metadata, msg})
   end
 
   defp handle_msg(%{"type" => "log",
@@ -65,7 +87,17 @@ defmodule Acception.AcceptorTcp.Protocol do
                     "ts"   => timestamp,
                     "m"    => msg})
   do
-    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, nil, msg})
+    GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, nil, nil, msg})
+  end
+
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "tags" => tags,
+                    "ts"   => timestamp,
+                    "md"   => metadata,
+                    "m"    => msg})
+  do
+    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, tags, metadata, msg})
   end
 
   defp handle_msg(%{"type" => "log",
@@ -74,7 +106,16 @@ defmodule Acception.AcceptorTcp.Protocol do
                     "ts"   => timestamp,
                     "m"    => msg})
   do
-    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, tags, msg})
+    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, tags, nil, msg})
+  end
+
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "ts"   => timestamp,
+                    "md"   => metadata,
+                    "m"    => msg})
+  do
+    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, nil, metadata, msg})
   end
 
   defp handle_msg(%{"type" => "log",
@@ -82,7 +123,7 @@ defmodule Acception.AcceptorTcp.Protocol do
                     "ts"   => timestamp,
                     "m"    => msg})
   do
-    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, nil, msg})
+    GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, nil, nil, msg})
   end
 
   defp handle_msg(msg) do

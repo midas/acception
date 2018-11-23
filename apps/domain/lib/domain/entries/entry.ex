@@ -5,6 +5,7 @@ defmodule Acception.Domain.Entries.Entry do
   schema "entries" do
     field :app, :string
     field :level, :string
+    field :metadata, :map
     field :msg, :string
     field :tags, {:array, :string}
     field :timestamp, :utc_datetime
@@ -17,6 +18,7 @@ defmodule Acception.Domain.Entries.Entry do
     |> cast(attrs, ~w(
          app
          level
+         metadata
          msg
          tags
          timestamp

@@ -14,8 +14,8 @@ defmodule Acception.Writer.Acceptor do
     {:ok, %{}}
   end
 
-  def handle_call({:write, level, app, timestamp, tags, msg}, _from, state) do
-    Processor.call(level, app, timestamp, tags, msg)
+  def handle_call({:write, level, app, timestamp, tags, metadata, msg}, _from, state) do
+    Processor.call(level, app, timestamp, tags, metadata, msg)
 
     {:reply, :ok, state}
   end
