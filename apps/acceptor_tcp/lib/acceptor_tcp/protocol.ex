@@ -26,49 +26,53 @@ defmodule Acception.AcceptorTcp.Protocol do
 
   def process(msg), do: Logger.error(["Unknown data interchange format: ", msg])
 
-  defp handle_msgpack_unpack({:ok, %{"type" => "log",
-                                     "l"    => level,
-                                     "a"    => app,
-                                     "tags" => tags,
-                                     "ts"   => timestamp,
-                                     "m"    => msg}})
+  defp handle_msgpack_unpack({:ok, msg_as_map}) do
+    handle_msg(msg_as_map)
+  end
+
+  defp handle_msgpack_unpack(%Msgpax.UnpackError{reason: reason}) do
+    raise reason
+  end
+
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "a"    => app,
+                    "tags" => tags,
+                    "ts"   => timestamp,
+                    "m"    => msg})
     when is_list(tags)
   do
     GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, tags, msg})
   end
 
-  defp handle_msgpack_unpack({:ok, %{"type" => "log",
-                                     "l"    => level,
-                                     "a"    => app,
-                                     "ts"   => timestamp,
-                                     "m"    => msg}})
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "a"    => app,
+                    "ts"   => timestamp,
+                    "m"    => msg})
   do
     GenServer.call(:WriterAcceptor, {:write, level, app, timestamp, nil, msg})
   end
 
-  defp handle_msgpack_unpack({:ok, %{"type" => "log",
-                                     "l"    => level,
-                                     "tags" => tags,
-                                     "ts"   => timestamp,
-                                     "m"    => msg}})
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "tags" => tags,
+                    "ts"   => timestamp,
+                    "m"    => msg})
   do
     GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, tags, msg})
   end
 
-  defp handle_msgpack_unpack({:ok, %{"type" => "log",
-                                     "l"    => level,
-                                     "ts"   => timestamp,
-                                     "m"    => msg}})
+  defp handle_msg(%{"type" => "log",
+                    "l"    => level,
+                    "ts"   => timestamp,
+                    "m"    => msg})
   do
     GenServer.call(:WriterAcceptor, {:write, level, nil, timestamp, nil, msg})
   end
 
-  defp handle_msgpack_unpack({:ok, msg}) do
+  defp handle_msg(msg) do
     Logger.error(["Unknown msg type: ", inspect(msg)])
-  end
-
-  defp handle_msgpack_unpack(%Msgpax.UnpackError{reason: reason})do
-    raise reason
   end
 
 end
