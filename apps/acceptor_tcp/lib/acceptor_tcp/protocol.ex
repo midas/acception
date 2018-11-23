@@ -18,6 +18,12 @@ defmodule Acception.AcceptorTcp.Protocol do
   """
   require Logger
 
+  def process("JSON" <> msg) do
+    msg
+    |> Jason.decode()
+    |> handle_json_decode()
+  end
+
   def process("MPCK" <> msg) do
     msg
     |> Msgpax.unpack()
@@ -25,6 +31,14 @@ defmodule Acception.AcceptorTcp.Protocol do
   end
 
   def process(msg), do: Logger.error(["Unknown data interchange format: ", msg])
+
+  defp handle_json_decode({:ok, msg_as_map}) do
+    handle_msg(msg_as_map)
+  end
+
+  defp handle_json_decode({:error, error}) do
+    raise error
+  end
 
   defp handle_msgpack_unpack({:ok, msg_as_map}) do
     handle_msg(msg_as_map)

@@ -26,6 +26,7 @@ defmodule Acception.AcceptorTcp.Mixfile do
 
   defp deps do
     [
+      {:jason, "~> 1.1"},
       {:msgpax, "~> 2.1"},
       {:ranch, "~> 1.7"},
     ]
