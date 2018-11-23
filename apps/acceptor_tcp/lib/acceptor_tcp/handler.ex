@@ -30,13 +30,14 @@ defmodule Acception.AcceptorTcp.Handler do
     # before to proceed with receive block on messages we should call
     # once transport.messages() to ping ranch
     {:tcp, :tcp_closed, :tcp_error} = transport.messages()
+    delim = delimiter()
 
     receive do
       {:tcp, socket, data} ->
         #Logger.debug("[tcp.handler] received data: #{inspect(data)}")
 
 				(acc <> data)
-        |> String.split(delimiter())
+        |> String.split(delim)
         |> Enum.map(&String.trim/1)
         |> process(socket, transport)
 
