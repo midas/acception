@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+current_dir="$(dirname "$0")"
+source $current_dir/shared/all
+
+die_on_sigint
+
+me=`basename $0`
+APP=true
+for i in "$@"
+do
+case $i in
+  --app)
+    APP=false
+    shift
+    ;;
+  --envs=*)
+    shift
+    ;;
+  --help|-h)
+    echo Usage:
+    echo "  $me"
+    exit
+    ;;
+  *)
+    echo Arguments '"'$@'"' not recognized
+    echo Try:
+    echo "  $me --help"
+    exit
+    ;;
+esac
+done
+
+IFS="$delimiter"
+
+delimiter="|"
+
+cmd="select app, level, metadata from entries where app = 'frontend' order by timestamp, id ;" 
+
+psql -h 127.0.0.1 \
+     -p 5440 \
+     -U postgres \
+     -d acception \
+     --set ON_ERROR_STOP=on \
+     --pset footer=off \
+     --no-align \
+     --tuples-only \
+     --field-separator "$delimiter" \
+     --quiet \
+     -X \
+     -c "$cmd" \
+| while read -a record ; do
+#| while read app level metadata ; do
+    app=${record[0]}
+    level=${record[1]}
+    metadata=${record[2]}
+
+    echo "App: $app | Level: $level | metadata: $metadata"
+    #echo "ENTRY: app:$app level:$level metadata:$metadata"
+  done
